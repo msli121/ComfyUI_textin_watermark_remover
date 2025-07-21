@@ -46,7 +46,10 @@ class TextinRemoveWatermark:
         if not api_id or not api_code:
             logger.error("API ID和API Code不能为空")
             return (image,)
-
+        if not image:
+            logger.error("输入图像不能为空")
+            return (image,)
+        image = image.permute(0, 3, 1, 2)
         # 将张量转换为PIL图像
         pil_image = F.to_pil_image(image.squeeze(0))
 
