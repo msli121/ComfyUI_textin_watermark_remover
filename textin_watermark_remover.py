@@ -46,7 +46,7 @@ class TextinRemoveWatermark:
         if not api_id or not api_code:
             logger.error("API ID和API Code不能为空")
             return (image,)
-        if not image:
+        if image is None:
             logger.error("输入图像不能为空")
             return (image,)
         image = image.permute(0, 3, 1, 2)
