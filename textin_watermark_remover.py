@@ -5,6 +5,8 @@ import tempfile
 from PIL import Image
 import folder_paths
 import logging
+import torch
+import numpy as np
 
 # 配置日志
 logger = logging.getLogger("comfyui-textin-watermark")
