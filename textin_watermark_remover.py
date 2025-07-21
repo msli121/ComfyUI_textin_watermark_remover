@@ -49,9 +49,32 @@ class TextinRemoveWatermark:
         if image is None:
             logger.error("输入图像不能为空")
             return (image,)
-        image = image.permute(0, 3, 1, 2)
-        # 将张量转换为PIL图像
-        pil_image = F.to_pil_image(image.squeeze(0))
+
+        # 检查并调整shape
+        if image.ndim == 4:
+            # (B, C, H, W) 或 (B, H, W, C)
+            if image.shape[1] in [1, 3, 4]:  # (B, C, H, W)
+                img_tensor = image[0]
+            elif image.shape[-1] in [1, 3, 4]:  # (B, H, W, C)
+                img_tensor = image[0].permute(2, 0, 1)
+            else:
+                logger.error(f"未知的图片shape: {image.shape}")
+                return (image,)
+        elif image.ndim == 3:
+            # (C, H, W) 或 (H, W, C)
+            if image.shape[0] in [1, 3, 4]:  # (C, H, W)
+                img_tensor = image
+            elif image.shape[-1] in [1, 3, 4]:  # (H, W, C)
+                img_tensor = image.permute(2, 0, 1)
+            else:
+                logger.error(f"未知的图片shape: {image.shape}")
+                return (image,)
+        else:
+            logger.error(f"未知的图片shape: {image.shape}")
+            return (image,)
+
+        # 转为PIL
+        pil_image = F.to_pil_image(img_tensor)
 
         # 创建临时文件
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -105,3 +128,10 @@ class TextinRemoveWatermark:
             logger.error(f"处理异常: {str(e)}")
 
         return None
+
+if __name__ == '__main__':
+    textin = TextinRemoveWatermark()
+    api_id = 'ebd58824ddf1ce45feaf892e6723995c'
+    api_code = 'd32a1567441bfbcebc8562074c3bb019'
+    result = textin._call_watermark_api(api_id, api_code, '/Users/a123/CodeRepository/ComfyUI_textin_watermark_remover/img.png')
+    result.save('/Users/a123/CodeRepository/ComfyUI_textin_watermark_remover/img_result.png')
