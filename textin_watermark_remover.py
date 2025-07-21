@@ -1,18 +1,17 @@
-import io
-
-import requests
 import base64
+import io
+import logging
 import os
 import tempfile
+
+import requests
+import torchvision.transforms.functional as F
 from PIL import Image
-import logging
-import torch
-import numpy as np
 
 # 配置日志
 logger = logging.getLogger("comfyui-textin-watermark")
 logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch = logging.StreamHandler()
 ch.setFormatter(formatter)
 logger.addHandler(ch)
@@ -32,7 +31,7 @@ class TextinRemoveWatermark:
             "required": {
                 "api_id": ("STRING", {"multiline": False, "default": ""}),
                 "api_code": ("STRING", {"multiline": False, "default": ""}),
-                "image": ("IMAGE",)
+                "image": ("IMAGE",),
             }
         }
 
@@ -49,7 +48,7 @@ class TextinRemoveWatermark:
             return (image,)
 
         # 将张量转换为PIL图像
-        pil_image = self._tensor_to_pil(image)
+        pil_image = F.to_pil_image(image.squeeze(0))
 
         # 创建临时文件
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -61,7 +60,7 @@ class TextinRemoveWatermark:
 
             if output_image:
                 # 转换回张量
-                output_tensor = self._pil_to_tensor(output_image)
+                output_tensor = F.to_tensor(output_image).unsqueeze(0)
                 return (output_tensor,)
 
         # 如果出错，返回原始图像
@@ -74,13 +73,13 @@ class TextinRemoveWatermark:
         url = "https://api.textin.com/ai/service/v1/image/watermark_remove"
 
         try:
-            with open(img_path, 'rb') as img_file:
+            with open(img_path, "rb") as img_file:
                 img_data = img_file.read()
 
             headers = {
                 "Content-Type": "application/octet-stream",
                 "x-ti-app-id": api_id,
-                "x-ti-secret-code": api_code
+                "x-ti-secret-code": api_code,
             }
 
             response = requests.post(url, headers=headers, data=img_data)
@@ -103,17 +102,3 @@ class TextinRemoveWatermark:
             logger.error(f"处理异常: {str(e)}")
 
         return None
-
-    def _tensor_to_pil(self, tensor):
-        """将张量转换为PIL图像"""
-        tensor = tensor.cpu().clone()
-        tensor = tensor.squeeze(0)
-        tensor = tensor.permute(1, 2, 0)
-        tensor = (tensor * 255).round().clamp(0, 255).to(torch.uint8).numpy()
-        return Image.fromarray(tensor)
-
-    def _pil_to_tensor(self, image):
-        """将PIL图像转换为张量"""
-        img = np.array(image).astype(np.float32) / 255.0
-        img = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0)
-        return img
