@@ -87,6 +87,7 @@ class TextinRemoveWatermark:
             if output_image:
                 # 转换回张量
                 output_tensor = F.to_tensor(output_image).unsqueeze(0)
+                logger.info(f"output_tensor shape: {output_tensor.shape}")
                 return (output_tensor,)
 
         # 如果出错，返回原始图像
@@ -116,7 +117,9 @@ class TextinRemoveWatermark:
                 base64_image = response_json["result"].get("image")
                 if base64_image:
                     img_data = base64.b64decode(base64_image)
-                    return Image.open(io.BytesIO(img_data))
+                    pil_image = Image.open(io.BytesIO(img_data))
+                    logger.info(f"pil image size: {pil_image.width}x{pil_image.height}")
+                    return pil_image
                 else:
                     logger.error("响应中未找到图像数据")
             else:
