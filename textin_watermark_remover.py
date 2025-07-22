@@ -107,7 +107,7 @@ class TextinRemoveWatermark:
                 "x-ti-app-id": api_id,
                 "x-ti-secret-code": api_code,
             }
-
+            logger.info(f"调用Textin去水印API, api_id: {api_id}, api_code: {api_code}, img_path: {img_path}")
             response = requests.post(url, headers=headers, data=img_data)
             response.raise_for_status()
 
@@ -128,10 +128,3 @@ class TextinRemoveWatermark:
             logger.error(f"处理异常: {str(e)}")
 
         return None
-
-if __name__ == '__main__':
-    textin = TextinRemoveWatermark()
-    api_id = 'ebd58824ddf1ce45feaf892e6723995c'
-    api_code = 'd32a1567441bfbcebc8562074c3bb019'
-    result = textin._call_watermark_api(api_id, api_code, '/Users/a123/CodeRepository/ComfyUI_textin_watermark_remover/img.png')
-    result.save('/Users/a123/CodeRepository/ComfyUI_textin_watermark_remover/img_result.png')
