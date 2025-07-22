@@ -36,6 +36,7 @@ class TextinRemoveWatermark:
         }
 
     RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
     FUNCTION = "remove_watermark"
     CATEGORY = "image/postprocessing"
 
@@ -85,9 +86,9 @@ class TextinRemoveWatermark:
             output_image = self._call_watermark_api(api_id, api_code, input_path)
 
             if output_image:
-                # 转换回张量
-                output_tensor = F.to_tensor(output_image).unsqueeze(0)
-                logger.info(f"output_tensor shape: {output_tensor.shape}")
+                # 转换回张量，转为 float32 类型，除以 255，并限制在 0～1 之间
+                output_tensor = F.to_tensor(output_image).unsqueeze(0).float().div(255).clamp(0, 1)
+                logger.info(f"output_tensor shape: {output_tensor.shape} type: {output_tensor.dtype}")
                 return (output_tensor,)
 
         # 如果出错，返回原始图像
