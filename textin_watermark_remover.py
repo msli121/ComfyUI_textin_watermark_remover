@@ -32,6 +32,7 @@ class TextinRemoveWatermark:
                 "api_id": ("STRING", {"multiline": False, "default": ""}),
                 "api_code": ("STRING", {"multiline": False, "default": ""}),
                 "image": ("IMAGE",),
+                "enable": ("BOOLEAN", {"default": False}),
             }
         }
 
@@ -40,10 +41,13 @@ class TextinRemoveWatermark:
     FUNCTION = "remove_watermark"
     CATEGORY = "image/postprocessing"
 
-    def remove_watermark(self, api_id, api_code, image):
+    def remove_watermark(self, api_id, api_code, image, enable=False):
         """
         调用Textin API去除图片水印
         """
+        if not enable:
+            logger.warning(f"未启用Textin API去除水印")
+            return (image,)
         if not api_id or not api_code:
             logger.error("API ID和API Code不能为空")
             return (image,)
@@ -90,7 +94,9 @@ class TextinRemoveWatermark:
                 output_tensor = F.to_tensor(output_image).unsqueeze(0).float()
                 # 调整维度顺序为 [1, H, W, C]
                 output_tensor = output_tensor.permute(0, 2, 3, 1)
-                logger.info(f"output_tensor shape: {output_tensor.shape} type: {output_tensor.dtype} min: {output_tensor.min()} max: {output_tensor.max()}")
+                logger.info(
+                    f"output_tensor shape: {output_tensor.shape} type: {output_tensor.dtype} min: {output_tensor.min()} max: {output_tensor.max()}"
+                )
                 return (output_tensor,)
 
         # 如果出错，返回原始图像
@@ -111,7 +117,9 @@ class TextinRemoveWatermark:
                 "x-ti-app-id": api_id,
                 "x-ti-secret-code": api_code,
             }
-            logger.info(f"调用Textin去水印API, api_id: {api_id}, api_code: {api_code}, img_path: {img_path}")
+            logger.info(
+                f"调用Textin去水印API, api_id: {api_id}, api_code: {api_code}, img_path: {img_path}"
+            )
             response = requests.post(url, headers=headers, data=img_data)
             response.raise_for_status()
 
