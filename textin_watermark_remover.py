@@ -87,10 +87,10 @@ class TextinRemoveWatermark:
 
             if output_image:
                 # 转换回张量，转为 float32 类型，除以 255，并限制在 0～1 之间
-                output_tensor = F.to_tensor(output_image).unsqueeze(0).float().div(255).clamp(0, 1)
+                output_tensor = F.to_tensor(output_image).unsqueeze(0).float()
                 # 调整维度顺序为 [1, H, W, C]
                 output_tensor = output_tensor.permute(0, 2, 3, 1)
-                logger.info(f"output_tensor shape: {output_tensor.shape} type: {output_tensor.dtype}")
+                logger.info(f"output_tensor shape: {output_tensor.shape} type: {output_tensor.dtype} min: {output_tensor.min()} max: {output_tensor.max()}")
                 return (output_tensor,)
 
         # 如果出错，返回原始图像
